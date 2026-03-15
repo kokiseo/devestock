@@ -26,10 +26,17 @@ export async function GET(
       )
     }
 
-    // レビューを取得
+    // レビューとカテゴリ別メモを取得
     const { data: review } = await supabase
       .from('reviews')
-      .select('*')
+      .select(`
+        *,
+        category_notes (
+          id,
+          category,
+          note
+        )
+      `)
       .eq('property_id', id)
       .single()
 
@@ -38,6 +45,7 @@ export async function GET(
       data: {
         property,
         review,
+        category_notes: review?.category_notes || [],
       },
     })
   } catch (error) {
@@ -84,8 +92,15 @@ export async function PUT(
       )
     }
 
-    // レビューを更新（存在する場合）
-    if (body.visit_date || body.overall_comment !== undefined || body.has_good_ideas !== undefined) {
+    // レビューを取得
+    const { data: review } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('property_id', id)
+      .single()
+
+    if (review) {
+      // レビューを更新
       const { error: reviewError } = await supabase
         .from('reviews')
         .update({
@@ -93,10 +108,42 @@ export async function PUT(
           overall_comment: body.overall_comment || null,
           has_good_ideas: body.has_good_ideas || false,
         })
-        .eq('property_id', id)
+        .eq('id', review.id)
 
       if (reviewError) {
         console.error('Review update error:', reviewError)
+      }
+
+      // カテゴリ別メモを更新
+      if (body.category_notes) {
+        for (const [category, noteData] of Object.entries(body.category_notes)) {
+          const { id: noteId, note } = noteData as { id?: string; note: string }
+
+          if (noteId) {
+            // 既存のメモを更新
+            if (note) {
+              await supabase
+                .from('category_notes')
+                .update({ note })
+                .eq('id', noteId)
+            } else {
+              // メモが空の場合は削除
+              await supabase
+                .from('category_notes')
+                .delete()
+                .eq('id', noteId)
+            }
+          } else if (note) {
+            // 新規メモを作成
+            await supabase
+              .from('category_notes')
+              .insert({
+                review_id: review.id,
+                category,
+                note,
+              })
+          }
+        }
       }
     }
 
