@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #102a43;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* スマホファースト: スクロールバーを細く */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #9fb3c8;
+  border-radius: 2px;
+}
+
+/* タップ時のハイライトを抑える */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 入力フォームのズーム防止（iOS） */
+input, select, textarea {
+  font-size: 16px;
+}
+
+@layer utilities {
+  /* タップターゲットの最小サイズ */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
