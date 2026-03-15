@@ -1,27 +1,43 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { CATEGORIES, PROPERTY_TYPES, GRADES, PREFECTURES } from '@/lib/constants'
 import type { Category } from '@/lib/constants'
-import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import {
+  ChevronLeftIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PhotoIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
 import { LightBulbIcon } from '@heroicons/react/24/outline'
 import { LightBulbIcon as LightBulbIconSolid } from '@heroicons/react/24/solid'
+
+type PhotoData = {
+  id: string
+  image_url: string
+  caption: string | null
+}
 
 type CategoryNoteData = {
   id?: string
   note: string
+  photos: PhotoData[]
 }
 
 export default function EditPropertyPage() {
   const router = useRouter()
   const params = useParams()
   const propertyId = params.id as string
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingCategory, setUploadingCategory] = useState<string | null>(null)
 
   // 物件データ
   const [name, setName] = useState('')
@@ -38,11 +54,12 @@ export default function EditPropertyPage() {
   const [visitDate, setVisitDate] = useState('')
   const [overallComment, setOverallComment] = useState('')
   const [hasGoodIdeas, setHasGoodIdeas] = useState(false)
+  const [reviewId, setReviewId] = useState<string | null>(null)
 
   // カテゴリ別メモ
   const [categoryNotes, setCategoryNotes] = useState<Record<Category, CategoryNoteData>>(
     Object.fromEntries(
-      Object.keys(CATEGORIES).map((key) => [key, { note: '' }])
+      Object.keys(CATEGORIES).map((key) => [key, { note: '', photos: [] }])
     ) as Record<Category, CategoryNoteData>
   )
 
@@ -75,10 +92,11 @@ export default function EditPropertyPage() {
         setVisitDate(review?.visit_date || '')
         setOverallComment(review?.overall_comment || '')
         setHasGoodIdeas(review?.has_good_ideas || false)
+        setReviewId(review?.id || null)
 
         // カテゴリ別メモをセット
         const notesMap = Object.fromEntries(
-          Object.keys(CATEGORIES).map((key) => [key, { note: '' }])
+          Object.keys(CATEGORIES).map((key) => [key, { note: '', photos: [] }])
         ) as Record<Category, CategoryNoteData>
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,14 +104,18 @@ export default function EditPropertyPage() {
           notesMap[n.category as Category] = {
             id: n.id,
             note: n.note || '',
+            photos: n.photos || [],
           }
         })
         setCategoryNotes(notesMap)
 
-        // メモがあるカテゴリを開く
+        // メモや写真があるカテゴリを開く
         const openSet = new Set<string>()
-        notes.forEach((n: { category: string; note: string }) => {
-          if (n.note) openSet.add(n.category)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        notes.forEach((n: any) => {
+          if (n.note || (n.photos && n.photos.length > 0)) {
+            openSet.add(n.category)
+          }
         })
         setOpenCategories(openSet)
       } catch (err) {
@@ -127,6 +149,71 @@ export default function EditPropertyPage() {
     }))
   }
 
+  // 写真アップロード
+  const handlePhotoUpload = async (category: Category, files: FileList) => {
+    const categoryNote = categoryNotes[category]
+
+    // カテゴリメモがない場合は先に作成する必要がある
+    if (!categoryNote.id && !categoryNote.note) {
+      alert('先にメモを入力して保存してください')
+      return
+    }
+
+    setUploadingCategory(category)
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('category_note_id', categoryNote.id || '')
+      formData.append('property_id', propertyId)
+
+      try {
+        const response = await fetch('/api/photos', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (response.ok) {
+          const { data: photo } = await response.json()
+          setCategoryNotes((prev) => ({
+            ...prev,
+            [category]: {
+              ...prev[category],
+              photos: [...prev[category].photos, photo],
+            },
+          }))
+        }
+      } catch (err) {
+        console.error('Upload error:', err)
+      }
+    }
+
+    setUploadingCategory(null)
+  }
+
+  // 写真削除
+  const handlePhotoDelete = async (category: Category, photoId: string) => {
+    if (!confirm('この写真を削除しますか？')) return
+
+    try {
+      const response = await fetch(`/api/photos?id=${photoId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setCategoryNotes((prev) => ({
+          ...prev,
+          [category]: {
+            ...prev[category],
+            photos: prev[category].photos.filter((p) => p.id !== photoId),
+          },
+        }))
+      }
+    } catch (err) {
+      console.error('Delete error:', err)
+    }
+  }
+
   // 更新処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -151,7 +238,12 @@ export default function EditPropertyPage() {
           visit_date: visitDate,
           overall_comment: overallComment,
           has_good_ideas: hasGoodIdeas,
-          category_notes: categoryNotes,
+          category_notes: Object.fromEntries(
+            Object.entries(categoryNotes).map(([key, value]) => [
+              key,
+              { id: value.id, note: value.note },
+            ])
+          ),
         }),
       })
 
@@ -371,7 +463,8 @@ export default function EditPropertyPage() {
           {Object.entries(CATEGORIES).map(([key, label]) => {
             const category = key as Category
             const isOpen = openCategories.has(key)
-            const hasContent = categoryNotes[category]?.note
+            const noteData = categoryNotes[category]
+            const hasContent = noteData?.note || noteData?.photos?.length > 0
 
             return (
               <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
@@ -385,6 +478,11 @@ export default function EditPropertyPage() {
                     {hasContent && (
                       <span className="w-2 h-2 bg-primary-500 rounded-full" />
                     )}
+                    {noteData?.photos?.length > 0 && (
+                      <span className="text-xs text-gray-500">
+                        ({noteData.photos.length}枚)
+                      </span>
+                    )}
                   </div>
                   {isOpen ? (
                     <ChevronUpIcon className="w-5 h-5 text-gray-400" />
@@ -394,14 +492,72 @@ export default function EditPropertyPage() {
                 </button>
 
                 {isOpen && (
-                  <div className="p-3 bg-white">
+                  <div className="p-3 bg-white space-y-3">
+                    {/* メモ入力 */}
                     <textarea
-                      value={categoryNotes[category]?.note || ''}
+                      value={noteData?.note || ''}
                       onChange={(e) => updateCategoryNote(category, e.target.value)}
                       rows={4}
                       placeholder={`${label}についてのメモ...`}
                       className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                     />
+
+                    {/* 写真一覧 */}
+                    {noteData?.photos?.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {noteData.photos.map((photo) => (
+                          <div key={photo.id} className="relative w-20 h-20">
+                            <Image
+                              src={photo.image_url}
+                              alt=""
+                              fill
+                              className="object-cover rounded-lg"
+                              sizes="80px"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handlePhotoDelete(category, photo.id)}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 写真追加ボタン */}
+                    {noteData?.id && (
+                      <div>
+                        <input
+                          ref={(el) => { fileInputRefs.current[key] = el }}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => {
+                            if (e.target.files) {
+                              handlePhotoUpload(category, e.target.files)
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRefs.current[key]?.click()}
+                          disabled={uploadingCategory === category}
+                          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          <PhotoIcon className="w-5 h-5" />
+                          {uploadingCategory === category ? 'アップロード中...' : '写真を追加'}
+                        </button>
+                      </div>
+                    )}
+
+                    {!noteData?.id && (
+                      <p className="text-xs text-gray-500">
+                        ※ 写真を追加するには、まずメモを入力して保存してください
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

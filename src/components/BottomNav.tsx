@@ -18,7 +18,7 @@ const navItems = [
   },
   {
     href: '/search',
-    label: '横断検索',
+    label: '検索',
     icon: MagnifyingGlassIcon,
     iconActive: MagnifyingGlassIconSolid,
   },

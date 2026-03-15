@@ -26,7 +26,7 @@ export async function GET(
       )
     }
 
-    // レビューとカテゴリ別メモを取得
+    // レビューとカテゴリ別メモ・写真を取得
     const { data: review } = await supabase
       .from('reviews')
       .select(`
@@ -34,7 +34,13 @@ export async function GET(
         category_notes (
           id,
           category,
-          note
+          note,
+          photos (
+            id,
+            image_url,
+            caption,
+            sort_order
+          )
         )
       `)
       .eq('property_id', id)
