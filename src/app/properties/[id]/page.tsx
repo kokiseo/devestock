@@ -2,6 +2,10 @@ import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PROPERTY_TYPES, GRADES, CATEGORIES } from '@/lib/constants'
+
+// キャッシュを無効化
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 import { CategoryAccordion } from '@/components/CategoryAccordion'
 import {
   ChevronLeftIcon,

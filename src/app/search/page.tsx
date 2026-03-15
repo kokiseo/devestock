@@ -4,6 +4,10 @@ import { CrossSearchResults } from '@/components/CrossSearchResults'
 import { EmptyState } from '@/components/EmptyState'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
+// キャッシュを無効化
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // 横断検索を実行
 async function searchCategoryNotes(params: {
   category?: string

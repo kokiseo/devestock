@@ -3,6 +3,10 @@ import { PropertyCard } from '@/components/PropertyCard'
 import { FilterBar } from '@/components/FilterBar'
 import { EmptyState } from '@/components/EmptyState'
 
+// キャッシュを無効化（常に最新データを取得）
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // 物件一覧を取得
 async function getProperties(searchParams: {
   prefecture?: string
