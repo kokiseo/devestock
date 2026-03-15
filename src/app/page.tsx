@@ -18,9 +18,11 @@ async function getProperties(searchParams: {
       reviews (
         id,
         has_good_ideas,
+        overall_comment,
         category_notes (
           id,
           category,
+          note,
           photos (
             id,
             image_url
@@ -40,9 +42,6 @@ async function getProperties(searchParams: {
   if (searchParams.grade) {
     query = query.eq('grade', searchParams.grade)
   }
-  if (searchParams.q) {
-    query = query.ilike('name', `%${searchParams.q}%`)
-  }
 
   const { data, error } = await query
 
@@ -51,21 +50,51 @@ async function getProperties(searchParams: {
     return []
   }
 
-  // アイデアありフィルタ
   let properties = data || []
+
+  // フリーワード検索（物件名 + メモ本文 + 総合コメント）
+  if (searchParams.q) {
+    const searchTerm = searchParams.q.toLowerCase()
+    properties = properties.filter((p) => {
+      // 物件名で検索
+      if (p.name?.toLowerCase().includes(searchTerm)) return true
+      // デベロッパー名で検索
+      if (p.developer?.toLowerCase().includes(searchTerm)) return true
+      // エリアで検索
+      if (p.prefecture?.toLowerCase().includes(searchTerm)) return true
+      if (p.city?.toLowerCase().includes(searchTerm)) return true
+
+      // レビュー内を検索
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return p.reviews?.some((r: any) => {
+        // 総合コメントで検索
+        if (r.overall_comment?.toLowerCase().includes(searchTerm)) return true
+        // カテゴリ別メモで検索
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return r.category_notes?.some((n: any) =>
+          n.note?.toLowerCase().includes(searchTerm)
+        )
+      })
+    })
+  }
+
+  // アイデアありフィルタ
   if (searchParams.ideas_only === 'true') {
     properties = properties.filter((p) =>
-      p.reviews?.some((r: { has_good_ideas: boolean }) => r.has_good_ideas)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      p.reviews?.some((r: any) => r.has_good_ideas)
     )
   }
 
   // サムネイル取得
   return properties.map((p) => {
-    const firstPhoto = p.reviews?.[0]?.category_notes?.[0]?.photos?.[0]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const firstPhoto = (p.reviews as any)?.[0]?.category_notes?.[0]?.photos?.[0]
     return {
       ...p,
       thumbnail_url: firstPhoto?.image_url || null,
-      has_good_ideas: p.reviews?.some((r: { has_good_ideas: boolean }) => r.has_good_ideas) || false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      has_good_ideas: p.reviews?.some((r: any) => r.has_good_ideas) || false,
     }
   })
 }
