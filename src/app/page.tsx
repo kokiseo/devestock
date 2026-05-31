@@ -134,7 +134,7 @@ export default async function HomePage({
           description="＋ボタンから最初の物件を登録しましょう"
         />
       ) : (
-        <div className="grid gap-4 mt-4">
+        <div className="grid grid-cols-2 gap-3 mt-4">
           {properties.map((property) => (
             <PropertyCard key={property.id} property={property} />
           ))}
