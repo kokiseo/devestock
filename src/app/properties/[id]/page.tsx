@@ -135,7 +135,7 @@ export default async function PropertyDetailPage({
         </div>
 
         {/* 規模情報 */}
-        {(property.total_units || property.floors || property.completion_year) && (
+        {(property.total_units || property.floors || property.completion_year || property.price_per_tsubo) && (
           <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100 text-sm">
             {property.total_units && (
               <div>
@@ -153,6 +153,12 @@ export default async function PropertyDetailPage({
               <div>
                 <span className="text-gray-500">竣工</span>
                 <span className="ml-1 font-medium">{property.completion_year}年</span>
+              </div>
+            )}
+            {property.price_per_tsubo && (
+              <div>
+                <span className="text-gray-500">坪単価</span>
+                <span className="ml-1 font-medium">{property.price_per_tsubo}万円</span>
               </div>
             )}
           </div>

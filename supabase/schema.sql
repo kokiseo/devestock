@@ -15,6 +15,7 @@ CREATE TABLE properties (
   total_units INTEGER,
   floors INTEGER,
   completion_year INTEGER,
+  price_per_tsubo INTEGER, -- 坪単価（万円）。業者向けの相場メモ
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   user_id UUID -- フェーズ3で外部キー化
@@ -91,3 +92,6 @@ CREATE POLICY "Allow all operations" ON properties FOR ALL USING (true) WITH CHE
 CREATE POLICY "Allow all operations" ON reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations" ON category_notes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations" ON photos FOR ALL USING (true) WITH CHECK (true);
+
+-- 既存DBへの追加（坪単価カラム）。新規構築時は上のCREATE TABLEに含まれているため不要
+-- ALTER TABLE properties ADD COLUMN price_per_tsubo INTEGER;

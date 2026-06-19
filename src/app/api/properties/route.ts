@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     const totalUnits = formData.get('total_units') as string
     const floors = formData.get('floors') as string
     const completionYear = formData.get('completion_year') as string
+    const pricePerTsubo = formData.get('price_per_tsubo') as string
 
     // レビュー情報
     const visitDate = formData.get('visit_date') as string
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
         total_units: totalUnits ? parseInt(totalUnits) : null,
         floors: floors ? parseInt(floors) : null,
         completion_year: completionYear ? parseInt(completionYear) : null,
+        price_per_tsubo: pricePerTsubo ? parseInt(pricePerTsubo) : null,
       })
       .select()
       .single()

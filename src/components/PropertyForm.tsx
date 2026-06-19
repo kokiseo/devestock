@@ -22,6 +22,7 @@ type Props = {
     total_units: string
     floors: string
     completion_year: string
+    price_per_tsubo: string
     visit_date: string
     overall_comment: string
     has_good_ideas: boolean
@@ -42,6 +43,7 @@ export function PropertyForm({ onSubmit, isSubmitting, initialData }: Props) {
   const [totalUnits, setTotalUnits] = useState(initialData?.total_units || '')
   const [floors, setFloors] = useState(initialData?.floors || '')
   const [completionYear, setCompletionYear] = useState(initialData?.completion_year || '')
+  const [pricePerTsubo, setPricePerTsubo] = useState(initialData?.price_per_tsubo || '')
 
   // レビュー情報
   const [visitDate, setVisitDate] = useState(initialData?.visit_date || new Date().toISOString().split('T')[0])
@@ -89,6 +91,7 @@ export function PropertyForm({ onSubmit, isSubmitting, initialData }: Props) {
     formData.append('total_units', totalUnits)
     formData.append('floors', floors)
     formData.append('completion_year', completionYear)
+    formData.append('price_per_tsubo', pricePerTsubo)
 
     // レビュー情報
     formData.append('visit_date', visitDate)
@@ -261,7 +264,7 @@ export function PropertyForm({ onSubmit, isSubmitting, initialData }: Props) {
             </div>
           </div>
 
-          {/* 総戸数・階数・竣工年 */}
+          {/* 総戸数・階数・竣工年・坪単価 */}
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -299,6 +302,20 @@ export function PropertyForm({ onSubmit, isSubmitting, initialData }: Props) {
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
+          </div>
+
+          {/* 坪単価（相場メモ） */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              坪単価（万円）
+            </label>
+            <input
+              type="number"
+              value={pricePerTsubo}
+              onChange={(e) => setPricePerTsubo(e.target.value)}
+              placeholder="例: 350"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
           </div>
 
           {/* 見学日 */}

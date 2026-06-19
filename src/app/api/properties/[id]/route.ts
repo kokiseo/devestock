@@ -87,6 +87,7 @@ export async function PUT(
         total_units: body.total_units || null,
         floors: body.floors || null,
         completion_year: body.completion_year || null,
+        price_per_tsubo: body.price_per_tsubo || null,
       })
       .eq('id', id)
 

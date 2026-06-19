@@ -61,6 +61,12 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
           <p className="text-[11px] text-gray-400 mt-0.5 truncate">{property.developer}</p>
         )}
 
+        {property.price_per_tsubo && (
+          <p className="text-[12px] font-bold text-primary-700 mt-1">
+            坪{property.price_per_tsubo}万円
+          </p>
+        )}
+
         <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-0.5">
           <MapPinIcon className="w-3 h-3 flex-shrink-0" />
           <span className="truncate">

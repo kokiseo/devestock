@@ -51,6 +51,7 @@ export default function EditPropertyPage() {
   const [totalUnits, setTotalUnits] = useState('')
   const [floors, setFloors] = useState('')
   const [completionYear, setCompletionYear] = useState('')
+  const [pricePerTsubo, setPricePerTsubo] = useState('')
   const [visitDate, setVisitDate] = useState('')
   const [overallComment, setOverallComment] = useState('')
   const [hasGoodIdeas, setHasGoodIdeas] = useState(false)
@@ -89,6 +90,7 @@ export default function EditPropertyPage() {
         setTotalUnits(property.total_units?.toString() || '')
         setFloors(property.floors?.toString() || '')
         setCompletionYear(property.completion_year?.toString() || '')
+        setPricePerTsubo(property.price_per_tsubo?.toString() || '')
         setVisitDate(review?.visit_date || '')
         setOverallComment(review?.overall_comment || '')
         setHasGoodIdeas(review?.has_good_ideas || false)
@@ -235,6 +237,7 @@ export default function EditPropertyPage() {
           total_units: totalUnits ? parseInt(totalUnits) : null,
           floors: floors ? parseInt(floors) : null,
           completion_year: completionYear ? parseInt(completionYear) : null,
+          price_per_tsubo: pricePerTsubo ? parseInt(pricePerTsubo) : null,
           visit_date: visitDate,
           overall_comment: overallComment,
           has_good_ideas: hasGoodIdeas,
@@ -442,6 +445,18 @@ export default function EditPropertyPage() {
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
+          </div>
+
+          {/* 坪単価（相場メモ） */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">坪単価（万円）</label>
+            <input
+              type="number"
+              value={pricePerTsubo}
+              onChange={(e) => setPricePerTsubo(e.target.value)}
+              placeholder="例: 350"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
           </div>
 
           {/* 見学日 */}

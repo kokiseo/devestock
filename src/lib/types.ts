@@ -16,6 +16,7 @@ export type Property = {
   total_units: number | null
   floors: number | null
   completion_year: number | null
+  price_per_tsubo: number | null
   created_at: string
   updated_at: string
   user_id: string | null
